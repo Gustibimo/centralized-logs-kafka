@@ -1,0 +1,30 @@
+version: "3.5"
+services:
+  filebeat:
+    hostname: filebeat
+    user: root
+    container_name: filebeat
+    build:
+      context: .
+      dockerfile: Dockerfile_filebeat
+    network_mode: "host"
+    volumes:
+     # needed to persist filebeat tracking data :
+     - "filebeat_data:/usr/share/filebeat/data:rw"
+     # needed to access all docker logs (read only) :
+     - "/var/lib/docker/containers:/usr/share/filebeat/dockerlogs/data:ro"
+     # needed to access additional informations about containers
+     - "/var/run/docker.sock:/var/run/docker.sock"
+
+  app:
+    hostname: app
+    container_name: app
+    build:
+      context: .
+      dockerfile: Dockerfile_app
+    depends_on:
+      - filebeat
+
+volumes:
+  # create a persistent volume for Filebeat
+  filebeat_data:
